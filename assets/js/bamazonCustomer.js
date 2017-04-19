@@ -6,14 +6,25 @@ function BCustomer(){
 	this.inquire = require('inquirer');
 	this.Table = require('cli-table');
 	this.colors = require('colors');
+
+	this.queryDB = new this.Mysql;
 }
 //-------------------------
-BCustomer.prototype.tableDisplay = function (products) {
+BCustomer.prototype.tableDisplay = function (dataObj) {
 	var table = new this.Table({
-		head: ['Item_ID', 'Product', 'Department', 'Prise $', 'In Stock']
+		head: dataObj.head
 	});
-	products.forEach(function (thisProduct) {
-		table.push([thisProduct.item_id, thisProduct.product_name, thisProduct.department_name, thisProduct.price, thisProduct.stock_quantity]);
+
+	dataObj.body.forEach(function (thisProduct) {
+		var row = [];
+
+		if(thisProduct.purchase){
+			row = [thisProduct.item_id, thisProduct.product_name, thisProduct.stock_quantity, thisProduct.price, thisProduct.purchase];
+			table.push(row);
+		} else {
+			row = [thisProduct.item_id, thisProduct.product_name, thisProduct.department_name, thisProduct.price, thisProduct.stock_quantity];
+			table.push(row);
+		}
 	});
 	console.log(table.toString());
 };
@@ -22,24 +33,46 @@ BCustomer.prototype.clearScreen = function () {
 	console.log('\033c');
 };
 //-------------------------
+BCustomer.prototype.checkout = function (product, quantity) {
+	var totalPurchase = quantity * product.price;
+
+	this.queryDB.postOrder(product.item_id, quantity);
+	var prodCheckout = {
+		item_id: product.item_id,
+		product_name: product.product_name,
+		stock_quantity: quantity,
+		price: product.price,
+		purchase: totalPurchase
+	};
+
+	this.clearScreen();
+	// display items in the table
+	this.tableDisplay({
+		head:['Item_ID', 'Product','Quantity', 'Prise $', 'Total Purchase'],
+		body:[prodCheckout]
+	});
+	this.queryDB.endConnection();
+};
+//-------------------------
 BCustomer.prototype.uiMain = function () {
-	var queryDB = new this.Mysql;
 	var id;
 	var quantity;
 	var idList = [];
 
 	this.clearScreen();
-
 	// list's all items
-	queryDB.getAll(function (res) {
+	this.queryDB.getAll(function (allProd) {
 
-		// create a list with all products ID's
-		res.forEach(function (prodID) {
-			idList.push(prodID.item_id);
+		// create 2 list with all products
+		allProd.forEach(function (prod) {
+			idList.push(prod.item_id);
 		});
 
 		// display items in the table
-		this.tableDisplay(res);
+		this.tableDisplay({
+			head:['Item_ID', 'Product', 'Department', 'Prise $', 'In Stock'],
+			body: allProd
+		});
 
 		// chose product by id
 		this.inquire.prompt([
@@ -53,35 +86,36 @@ BCustomer.prototype.uiMain = function () {
 					}
 				}
 			}
-		]).then(function (res) {
-			id = res.productID;
-			var stockStatus;
+		]).then(function (product) {
+			id = parseInt(product.productID);
 
-			queryDB.getStock(id,function (itemQuantity) {
-				stockStatus = itemQuantity;
-			});
-
-			// chose quantity
-			this.inquire.prompt([
-				{
-					type: 'input',
-					name: 'quantity',
-					message: 'Quantity:',
-					validate: function (value) {
-						if(value <= stockStatus){
-							return true;
-						} else {
-							console.log('\n Stock Insuficient!');
+			this.queryDB.getStock(id,function (currentStock) {
+				// chose quantity
+				this.inquire.prompt([
+					{
+						type: 'input',
+						name: 'quantity',
+						message: 'Quantity:',
+						validate: function (value) {
+							if(value <= currentStock && value > 0){
+								return true;
+							} else {
+								console.log('\n Insufficient quantity!');
+							}
 						}
 					}
-				}
-			]).then(function (res) {
-				quantity = res.quantity;
+				]).then(function (quantitySelected) {
 
+					allProd.forEach(function (thisProduct) {
 
+						if(thisProduct.item_id === id) {
+							this.checkout(thisProduct,parseInt(quantitySelected.quantity));
+						}
 
-				queryDB.endConnection();
-				this.clearScreen();
+					}.bind(this));
+
+				}.bind(this));
+
 			}.bind(this));
 		}.bind(this));
 	}.bind(this));
@@ -89,16 +123,12 @@ BCustomer.prototype.uiMain = function () {
 
 };
 
+
+
+
+
 var customer = new BCustomer();
 
 
 customer.uiMain();
-
-/*customer.query('get_all',[],function (res) {
-		customer.tableDisplay(res);
-});
-
-customer.query('get_stock_by_id',[{item_id: 3}], function (res) {
-	customer.tableDisplay(res);
-});*/
 
