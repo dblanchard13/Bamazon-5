@@ -22,7 +22,7 @@ QueryDB.prototype.getAll = function (callback) {
 QueryDB.prototype.getStock = function (id,callback) {
 	this.db.query('SELECT * FROM products WHERE  ?',{item_id: id},  function (err, res) {
 		if (err) throw err;
-		callback(res);
+		callback(res[0].stock_quantity);
 	});
 
 };

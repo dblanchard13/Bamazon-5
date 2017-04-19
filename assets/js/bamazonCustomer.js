@@ -2,7 +2,7 @@ function BCustomer(){
 	if(!(this instanceof BCustomer)){
 		return new BCustomer();
 	}
-	this.mysql = require('./queryDB.js');
+	this.Mysql = require('./queryDB.js');
 	this.inquire = require('inquirer');
 	this.Table = require('cli-table');
 	this.colors = require('colors');
@@ -23,18 +23,22 @@ BCustomer.prototype.clearScreen = function () {
 };
 //-------------------------
 BCustomer.prototype.uiMain = function () {
-	var queryDB = new this.mysql;
+	var queryDB = new this.Mysql;
 	var id;
 	var quantity;
-	var prodList;
+	var idList = [];
 
 	this.clearScreen();
 
 	// list's all items
 	queryDB.getAll(function (res) {
-		prodList = res;
 
-		// display items in table
+		// create a list with all products ID's
+		res.forEach(function (prodID) {
+			idList.push(prodID.item_id);
+		});
+
+		// display items in the table
 		this.tableDisplay(res);
 
 		// chose product by id
@@ -42,24 +46,39 @@ BCustomer.prototype.uiMain = function () {
 			{
 				type: 'input',
 				name: 'productID',
-				message: 'Enter the ID of the product you want to buy:'
+				message: 'Enter the ID of the product you want to buy:',
+				validate: function (value) {
+					if(idList.indexOf(parseInt(value)) !== -1){
+						return true;
+					}
+				}
 			}
 		]).then(function (res) {
 			id = res.productID;
+			var stockStatus;
+
+			queryDB.getStock(id,function (itemQuantity) {
+				stockStatus = itemQuantity;
+			});
 
 			// chose quantity
 			this.inquire.prompt([
 				{
 					type: 'input',
 					name: 'quantity',
-					message: 'Quantity: '
+					message: 'Quantity:',
+					validate: function (value) {
+						if(value <= stockStatus){
+							return true;
+						} else {
+							console.log('\n Stock Insuficient!');
+						}
+					}
 				}
 			]).then(function (res) {
 				quantity = res.quantity;
 
-				queryDB.getStock(id,function (item) {
-					console.log(item);
-				});
+
 
 				queryDB.endConnection();
 				this.clearScreen();
