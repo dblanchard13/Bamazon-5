@@ -1,0 +1,25 @@
+{
+  "name": "bamazon-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bamazonCustomer.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/martinsflavio/Bamazon.git"
+  },
+  "author": "Flavio Martins",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/martinsflavio/Bamazon/issues"
+  },
+  "homepage": "https://github.com/martinsflavio/Bamazon#readme",
+  "dependencies": {
+    "cli-table": "^0.3.1",
+    "colors": "^1.1.2",
+    "inquirer": "^3.0.6",
+    "mysql": "^2.13.0"
+  }
+}
