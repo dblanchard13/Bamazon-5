@@ -1,4 +1,7 @@
 var QueryDB = function () {
+	if(!(this instanceof QueryDB)){
+		return new QueryDB();
+	}
 	this.mysql = require('mysql');
 
 	this.db = this.mysql.createConnection({
@@ -11,12 +14,22 @@ var QueryDB = function () {
 
 };
 //----------------------------------
+QueryDB.prototype.connectionCheck = function () {
+	this.db.connect(function(err) {
+		if (err) {
+			console.error('error connecting: ' + err.stack);
+			return;
+		}
+		console.log('connected as id ' + this.db.threadId);
+	}.bind(this));
+	this.db.end();
+};
+//----------------------------------
 QueryDB.prototype.getAll = function (callback) {
 	this.db.query('SELECT * FROM products WHERE stock_quantity > 0', function (err, res) {
 		if(err) throw err;
 		callback(res);
 	});
-
 };
 //----------------------------------
 QueryDB.prototype.getStock = function (id,callback) {
@@ -24,7 +37,6 @@ QueryDB.prototype.getStock = function (id,callback) {
 		if (err) throw err;
 		callback(res[0].stock_quantity);
 	});
-
 };
 //----------------------------------
 QueryDB.prototype.endConnection = function () {
@@ -46,6 +58,8 @@ QueryDB.prototype.postOrder = function (itemID, quant) {
 
 module.exports = QueryDB;
 
+/*
 
-var mydb = new QueryDB();
+var mydb = QueryDB();
 
+mydb.connectionCheck();*/

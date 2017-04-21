@@ -2,7 +2,7 @@ function BCustomer(){
 	if(!(this instanceof BCustomer)){
 		return new BCustomer();
 	}
-	this.Mysql = require('./queryDB.js');
+	this.Mysql = require('./customerQueryDB.js');
 	this.inquire = require('inquirer');
 	this.Table = require('cli-table');
 	this.colors = require('colors');
@@ -55,27 +55,28 @@ BCustomer.prototype.checkout = function (product, quantity) {
 };
 //-------------------------
 BCustomer.prototype.uiMain = function () {
+	var self = this;
 	var id;
 	var quantity;
 	var idList = [];
 
-	this.clearScreen();
+	self.clearScreen();
 	// list's all items
-	this.queryDB.getAll(function (allProd) {
+	self.queryDB.getAll(function (allProd) {
 
-		// create 2 list with all products
+		// create a list with all products ID's
 		allProd.forEach(function (prod) {
 			idList.push(prod.item_id);
 		});
 
 		// display items in the table
-		this.tableDisplay({
+		self.tableDisplay({
 			head:['Item_ID', 'Product', 'Department', 'Prise $', 'In Stock'],
 			body: allProd
 		});
 
 		// chose product by id
-		this.inquire.prompt([
+		self.inquire.prompt([
 			{
 				type: 'input',
 				name: 'productID',
@@ -89,9 +90,9 @@ BCustomer.prototype.uiMain = function () {
 		]).then(function (product) {
 			id = parseInt(product.productID);
 
-			this.queryDB.getStock(id,function (currentStock) {
+			self.queryDB.getStock(id,function (currentStock) {
 				// chose quantity
-				this.inquire.prompt([
+				self.inquire.prompt([
 					{
 						type: 'input',
 						name: 'quantity',
@@ -109,16 +110,14 @@ BCustomer.prototype.uiMain = function () {
 					allProd.forEach(function (thisProduct) {
 
 						if(thisProduct.item_id === id) {
-							this.checkout(thisProduct,parseInt(quantitySelected.quantity));
+							self.checkout(thisProduct,parseInt(quantitySelected.quantity));
 						}
 
-					}.bind(this));
-
-				}.bind(this));
-
-			}.bind(this));
-		}.bind(this));
-	}.bind(this));
+					});
+				});
+			});
+		});
+	});
 
 
 };
@@ -131,4 +130,3 @@ var customer = new BCustomer();
 
 
 customer.uiMain();
-
