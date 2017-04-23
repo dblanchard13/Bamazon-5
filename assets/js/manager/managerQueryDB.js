@@ -50,7 +50,9 @@ QueryDB.prototype.addProduct = function (prodObj) {
 	});
 };
 //---------------------------------
-
+QueryDB.prototype.endConnection = function () {
+	this.db.end();
+};
 
 
 

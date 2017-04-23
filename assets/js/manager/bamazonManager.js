@@ -62,6 +62,7 @@ Bmanager.prototype.uiMain = function () {
 						body: products
 					});
 				});
+
 			break;
 			case 'View Low Inventory':
 				self.clearScreen();
@@ -147,7 +148,6 @@ Bmanager.prototype.uiMain = function () {
 	});
 };
 //-------------------------
-
 
 
 var myUi = new Bmanager();
