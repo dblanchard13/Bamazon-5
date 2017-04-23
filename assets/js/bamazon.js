@@ -39,17 +39,25 @@ Bamazon.prototype.tableDisplay = function (dataObj,callback) {
 		head: dataObj.head
 	});
 
-	dataObj.body.forEach(function (thisProduct) {
+	for (var i = 0; i < dataObj.body.length; i ++) {
 		var row = [];
+		var thisProduct = dataObj.body[i];
+		var totalPurchase = 0;
 
 		if(thisProduct.purchase){
 			row = [thisProduct.item_id, thisProduct.product_name, thisProduct.qt, thisProduct.price, thisProduct.purchase];
 			table.push(row);
+			totalPurchase += parseInt(thisProduct.purchase);
+
+			if (i + 1 === parseInt(dataObj.body.length)) {
+				row = ['','','','Total $',totalPurchase];
+				table.push(row);
+			}
 		} else {
 			row = [thisProduct.item_id, thisProduct.product_name, thisProduct.price, thisProduct.stock_quantity];
 			table.push(row);
 		}
-	});
+	}
 
 	if (typeof callback === 'function') {
 		callback();
