@@ -113,6 +113,7 @@ BCustomer.prototype.buyOneMore = function () {
 				self.customer.postOrder(self.userCart, function (cart) {
 					var tableObj;
 
+					// Modeling product Obj to display in table
 					cart.forEach(function (product) {
 						var prodObj = {
 							item_id: product.product.item_id,
@@ -122,14 +123,16 @@ BCustomer.prototype.buyOneMore = function () {
 							purchase: product.qt * product.product.price
 						};
 						prodList.push(prodObj);
+						// Update Inventory
+
 					});
 
+					// Table Obj
 					tableObj = {
 						head: ['ID', 'Product', 'Quantity', 'Price $', 'Purchase $'],
 						body: prodList
 					};
 					self.customer.clearScreen();
-
 					self.customer.tableDisplay(tableObj);
 					self.customer.endConnection();
 
@@ -137,7 +140,6 @@ BCustomer.prototype.buyOneMore = function () {
 			}
 		});
 	}, 1000);
-
 };
 
 

@@ -45,7 +45,7 @@ Bamazon.prototype.tableDisplay = function (dataObj,callback) {
 		var totalPurchase = 0;
 
 		if(thisProduct.purchase){
-			row = [thisProduct.item_id, thisProduct.product_name, thisProduct.qt, thisProduct.price, thisProduct.purchase];
+			row = [thisProduct.item_id, thisProduct.product_name, thisProduct.qt, thisProduct.price, thisProduct.purchase.toFixed(2)];
 			table.push(row);
 			totalPurchase += parseInt(thisProduct.purchase);
 
@@ -70,6 +70,10 @@ Bamazon.prototype.getAll = function (callback) {
 		if(err) throw err;
 		callback(res);
 	});
+};
+//---------------------------------
+Bamazon.prototype.updateDepartmentInventory = function () {
+	this.db.query()
 };
 //---------------------------------
 Bamazon.prototype.postOrder = function (cart,callback) {
