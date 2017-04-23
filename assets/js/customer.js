@@ -6,30 +6,13 @@ function BCustomer() {
 	this.Bamazon = require('./bamazon.js');
 	this.inquire = require('inquirer');
 	this.customer = new this.Bamazon();
+	this.userCart = [];
 }
-//-----------------------------------
-BCustomer.prototype.checkout = function (product, quantity) {
-	var totalPurchase = quantity * product.price;
-	var prodCheckout = {
-		item_id: product.item_id,
-		product_name: product.product_name,
-		stock_quantity: quantity,
-		price: product.price,
-		purchase: totalPurchase
-	};
-	this.customer.postOrder(product.item_id, quantity);
-	this.customer.clearScreen();
-	// display items in the table
-	this.customer.tableDisplay({
-		head:['Item_ID', 'Product','Quantity', 'Prise $', 'Total Purchase'],
-		body:[prodCheckout]
-	});
-};
+
 //-----------------------------------
 BCustomer.prototype.userInput = function () {
 	var self = this;
 	var idList = [];
-	var prodList = [];
 	var askID;
 	var askQt;
 
@@ -40,7 +23,6 @@ BCustomer.prototype.userInput = function () {
 		// Create a list of product ID's
 		allProd.forEach(function (product) {
 			idList.push(parseInt(product.item_id));
-			prodList.push(product);
 		});
 		// Create obj table to pass into display function table
 		tableData = {
@@ -80,29 +62,33 @@ BCustomer.prototype.userInput = function () {
 
 		self.inquire.prompt(askID).then(function (res) {
 			var id = parseInt(res.productID);
+
 			self.inquire.prompt(askQt).then(function (res) {
 				var qt = parseInt(res.qt);
+
 				self.customer.clearScreen();
 
-				prodList.forEach(function (product) {
-					if (product.item_id === id) {
-						self.checkout(product,qt);
-					}
-				});
-				self.tryAgain();
+				self.customer.validatePurchase(id,qt, function (validStock) {
+					if (validStock) {
+						console.log('\nProduct saved in the Cart!\n');
 
+						allProd.forEach(function (product) {
+							if(product.item_id === id) {
+								self.userCart.push({product: product, qt:qt});
+							}
+						});
+
+					} else {
+						console.log('\nInsufficient products in stock!\n');
+					}
+					self.buyOneMore();
+				});
 			});
 		});
 	});
-
-
-
-
-
-
 };
 //-----------------------------------
-BCustomer.prototype.tryAgain = function () {
+BCustomer.prototype.buyOneMore = function () {
 	var self = this;
 	var ask = [
 		{
@@ -115,20 +101,44 @@ BCustomer.prototype.tryAgain = function () {
 
 	//TODO (Developer) find a diferent way to solve the async behavior
 	setTimeout(function(){
+
 		self.inquire.prompt(ask).then(function (res) {
+			var prodList = [];
+
 			if (res.userInput) {
+
 				self.userInput();
+
 			} else {
-				self.customer.clearScreen();
-				self.customer.endConnection();
+				self.customer.postOrder(self.userCart, function (cart) {
+					var tableObj;
+
+					cart.forEach(function (product) {
+						var prodObj = {
+							item_id: product.product.item_id,
+							product_name: product.product.product_name,
+							qt:product.qt,
+							price: product.product.price,
+							purchase: product.qt * product.product.price
+						};
+						prodList.push(prodObj);
+					});
+
+					tableObj = {
+						head: ['ID', 'Product', 'Quantity', 'Price $', 'Purchase $'],
+						body: prodList
+					};
+					self.customer.clearScreen();
+
+					self.customer.tableDisplay(tableObj);
+					self.customer.endConnection();
+
+				});
 			}
 		});
 	}, 1000);
 
 };
-
-
-
 
 
 

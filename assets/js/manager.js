@@ -9,7 +9,7 @@ function BManager() {
 }
 
 //---------------------------------
-BManager.prototype.tryAgain = function () {
+BManager.prototype.buyOneMore = function () {
 	var self = this;
 	var ask = [
 		{
@@ -56,7 +56,7 @@ BManager.prototype.userInput = function () {
 						body: allProd
 					};
 					self.manager.tableDisplay(tableData, function () {
-						self.tryAgain();
+						self.buyOneMore();
 					});
 				});
 			break;
@@ -70,7 +70,7 @@ BManager.prototype.userInput = function () {
 						body: lowProd
 					};
 					self.manager.tableDisplay(tableData, function () {
-						self.tryAgain();
+						self.buyOneMore();
 					});
 				});
 			break;
@@ -100,7 +100,7 @@ BManager.prototype.userInput = function () {
 					];
 					self.inquire.prompt(promptAddToInventory).then(function (res) {
 						self.manager.addInventory(res.item_id,res.quantity,function () {
-							self.tryAgain();
+							self.buyOneMore();
 						});
 					});
 			break;
@@ -130,7 +130,7 @@ BManager.prototype.userInput = function () {
 				];
 				self.inquire.prompt(promptNewItem).then(function (newProd) {
 					self.manager.addProduct(newProd,function () {
-						self.tryAgain();
+						self.buyOneMore();
 					});
 				});
 			break;

@@ -43,7 +43,7 @@ Bamazon.prototype.tableDisplay = function (dataObj,callback) {
 		var row = [];
 
 		if(thisProduct.purchase){
-			row = [thisProduct.item_id, thisProduct.product_name, thisProduct.stock_quantity, thisProduct.price, thisProduct.purchase];
+			row = [thisProduct.item_id, thisProduct.product_name, thisProduct.qt, thisProduct.price, thisProduct.purchase];
 			table.push(row);
 		} else {
 			row = [thisProduct.item_id, thisProduct.product_name, thisProduct.price, thisProduct.stock_quantity];
@@ -64,17 +64,34 @@ Bamazon.prototype.getAll = function (callback) {
 	});
 };
 //---------------------------------
-Bamazon.prototype.postOrder = function (itemID, quant) {
-	this.db.query('UPDATE products SET stock_quantity = stock_quantity - '+quant+' WHERE ? AND stock_quantity >= '+ quant, [{item_id: itemID}], function (err, res) {
+Bamazon.prototype.postOrder = function (cart,callback) {
+
+	cart.forEach(function (thisProduct) {
+		this.db.query(
+				'UPDATE products ' +
+				'SET ' +
+					'stock_quantity = stock_quantity - '+thisProduct.qt+',' +
+					'product_sales = product_sales + '+thisProduct.qt+' ' +
+				'WHERE ? ',{item_id: thisProduct.product.item_id}, function (err) {
+			if (err) {
+				throw err;
+			}
+		}.bind(this));
+	}.bind(this));
+	callback(cart);
+};
+//---------------------------------
+Bamazon.prototype.validatePurchase = function (prodID, quantity, callback) {
+	this.db.query('SELECT * FROM products WHERE (stock_quantity >= ' + quantity + ') AND (?)', {item_id: prodID}, function (err, res) {
 		if (err) throw err;
-		if(res.changedRows !== 0){
-			console.log('\nOrder Posted!\n');
+		if(res.length !== 0) {
+			callback(true);
 		} else {
-			console.log('\nInsuficient Stock!\n');
+			callback(false);
 		}
 	}.bind(this));
 };
-//---------------------------------
+
 
 // Manager View
 Bamazon.prototype.lowInvetory = function (low, callback) {
